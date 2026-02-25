@@ -11,14 +11,6 @@ const PORT = process.env.PORT || 4000;
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-
-connectDB();
-
-app.use("/api", authRoutes, expenseRoutes);
-
-// example Express setup
 
 app.use(
   cors({
@@ -29,6 +21,12 @@ app.use(
     credentials: true,
   })
 );
+app.use(express.json());
+
+connectDB();
+
+app.use("/api/auth", authRoutes);
+app.use("/api/expense", expenseRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
