@@ -1,21 +1,26 @@
 import mongoose from "mongoose";
 
 const expenseSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-  },
   amount: {
     type: Number,
+    required: true,
+  },
+  type: {
+    type: String,
+    enum: ["Income", "Expense"],
     required: true,
   },
   category: {
     type: String,
     required: true,
   },
-  createdAt: {
+  description: {
+    type: String,
+    required: false,
+  },
+  date: {
     type: Date,
-    default: Date.now,
+    required: true,
   },
 });
 
