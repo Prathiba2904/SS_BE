@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import connectDB from "./db/db.config";
 import expenseRoutes from "./routes/expense.routes";
+import authRoutes from "./routes/auth.routes";
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ app.use(express.json());
 
 connectDB();
 
-app.use("/api/expenses", expenseRoutes);
+app.use("/api", authRoutes, expenseRoutes);
 
 // example Express setup
 

@@ -1,6 +1,6 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-export interface IUser extends Document {
+export interface IUser extends mongoose.Document {
   name: string;
   email: string;
   password: string;
@@ -22,18 +22,9 @@ const UserSchema: Schema = new Schema(
       type: String,
       required: true,
     },
-    role: {
-      type: String,
-      enum: ["admin", "user"],
-      default: "user",
-    },
+    
   },
   { timestamps: true }
 );
 
 export default mongoose.model<IUser>("User", UserSchema);
-
-
-
-
-
