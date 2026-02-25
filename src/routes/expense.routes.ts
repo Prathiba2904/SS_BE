@@ -4,7 +4,7 @@ import Expense from "../model/expense.model";
 const router = express.Router();
 
 // Add Expense
-router.post("/", async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
     const expense = new Expense(req.body);
     await expense.save();
