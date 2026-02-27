@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import connectDB from "./db/db.config";
 import expenseRoutes from "./routes/expense.routes";
 import authRoutes from "./routes/auth.routes";
@@ -19,9 +20,12 @@ app.use(
       "https://spendsmartly-beta.vercel.app",
     ],
     credentials: true,
+     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+     allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
 app.use(express.json());
+app.use(cookieParser());
 
 connectDB();
 

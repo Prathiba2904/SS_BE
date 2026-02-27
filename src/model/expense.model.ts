@@ -1,27 +1,38 @@
 import mongoose from "mongoose";
 
 const expenseSchema = new mongoose.Schema({
-  amount: {
+  Amount: {
     type: Number,
     required: true,
   },
-  type: {
+  Type: {
     type: String,
     enum: ["Income", "Expense"],
     required: true,
+    set: (value: string) => {
+      // Convert to proper case: first letter uppercase, rest lowercase
+      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    },
   },
-  category: {
+  Category: {
     type: String,
     required: true,
   },
-  description: {
+  Description: {
     type: String,
     required: false,
   },
-  date: {
+  Date: {
     type: Date,
     required: true,
   },
-});
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+},
+{ timestamps: true }
+);
 
 export default mongoose.model("Expense", expenseSchema);

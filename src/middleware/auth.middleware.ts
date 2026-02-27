@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
   user?: any;
+  cookies: any;
 }
 
 export const protect = (
@@ -10,10 +11,11 @@ export const protect = (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  // Extract token from httpOnly cookie
+  const token = req.cookies?.token;
 
   if (!token) {
-    return res.status(401).json({ message: "Not authorized" });
+    return res.status(401).json({ message: "Not authorized. Please login first." });
   }
 
   try {
@@ -25,7 +27,7 @@ export const protect = (
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
+    return res.status(401).json({ message: "Invalid or expired token. Please login again." });
   }
 };
 

@@ -1,6 +1,46 @@
 import { Request, Response } from "express";
-import { loginUser } from "../service/auth.service";
+import { loginUser, registerUser } from "../service/auth.service";
 import User from "../model/user.model";
+
+export const register = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Name, email, and password are required",
+      });
+    }
+
+    const data = await registerUser(name, email, password);
+
+    // Set httpOnly cookie with JWT token
+    res.cookie("token", data.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      user: data.user,
+    });
+  } catch (error: any) {
+    console.error("Registration error:", error);
+    
+    // Handle specific database errors
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "Email already exists. Please use a different email.",
+      });
+    }
+
+    return res.status(400).json({
+      message: error.message || "Registration failed. Please try again.",
+    });
+  }
+};
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -14,12 +54,34 @@ export const login = async (req: Request, res: Response) => {
 
     const data = await loginUser(email, password);
 
+    // Set httpOnly cookie with JWT token
+    res.cookie("token", data.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
     return res.status(200).json({
       message: "Login successful",
-      ...data,
+      user: data.user,
     });
   } catch (error: any) {
     return res.status(401).json({
+      message: error.message,
+    });
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    // Clear the httpOnly cookie
+    res.clearCookie("token");
+    return res.status(200).json({
+      message: "Logged out successfully",
+    });
+  } catch (error: any) {
+    return res.status(500).json({
       message: error.message,
     });
   }
