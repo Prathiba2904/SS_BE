@@ -10,7 +10,6 @@ jobs:
   build:
     runs-on: self-hosted
 
-  
     steps:
       - uses: actions/checkout@v4
 
@@ -20,22 +19,24 @@ jobs:
           node-version: 20.9.0
           cache: "npm"
 
+     
+      - name: Create .env file
+        run: |
+          echo "PORT=${{ secrets.PORT }}" > .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build project
         run: npm run build
 
-      - name: Start application with PM2
+      - name: Install PM2
+        run: npm install -g pm2
+
+      - name: Restart PM2
         run: |
-          npm install -g pm2
+          pm2 delete expense-app || true
           pm2 start dist/index.js --name expense-app
-
-      - name: Restart PM2 process
-        run: |
-          pm2 restart expense-app || echo "process not running"
-
-      - name: Save PM2 process list
-        run: pm2 save
-
-    
+          pm2 save
