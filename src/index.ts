@@ -17,7 +17,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://spendsmartly-beta.vercel.app",
+      "https://spendsmartly-beta.vercel.app/",
     ],
     credentials: true,
      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
