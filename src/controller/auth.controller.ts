@@ -17,8 +17,8 @@ export const register = async (req: Request, res: Response) => {
     // Set httpOnly cookie with JWT token
     res.cookie("token", data.token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: false,   // keep false for now (since using HTTP)
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -57,8 +57,8 @@ export const login = async (req: Request, res: Response) => {
     // Set httpOnly cookie with JWT token
     res.cookie("token", data.token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: false,   // keep false for now (since using HTTP)
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
