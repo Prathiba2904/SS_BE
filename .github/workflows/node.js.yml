@@ -26,4 +26,16 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Start application with PM2
+        run: |
+          npm install -g pm2
+          pm2 start dist/index.js --name expense-app
+
+      - name: Restart PM2 process
+        run: |
+          pm2 restart expense-app || echo "process not running"
+
+      - name: Save PM2 process list
+        run: pm2 save
+
     
