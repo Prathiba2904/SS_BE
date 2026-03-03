@@ -14,17 +14,14 @@ export const register = async (req: Request, res: Response) => {
 
     const data = await registerUser(name, email, password);
 
-    // Set httpOnly cookie with JWT token
-    res.cookie("token", data.token, {
-      httpOnly: true,
-      secure: false,   // keep false for now (since using HTTP)
-      sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
     return res.status(201).json({
       message: "User registered successfully",
-      user: data.user,
+      token: data.token,
+      user: {
+        id: data.user._id,
+        email: data.user.email,
+        role: data.user.role
+      }
     });
   } catch (error: any) {
     console.error("Registration error:", error);
@@ -54,17 +51,14 @@ export const login = async (req: Request, res: Response) => {
 
     const data = await loginUser(email, password);
 
-    // Set httpOnly cookie with JWT token
-    res.cookie("token", data.token, {
-      httpOnly: true,
-      secure: false,   // keep false for now (since using HTTP)
-      sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
     return res.status(200).json({
       message: "Login successful",
-      user: data.user,
+      token: data.token,
+      user: {
+        id: data.user._id,
+        email: data.user.email,
+        role: data.user.role
+      }
     });
   } catch (error: any) {
     return res.status(401).json({

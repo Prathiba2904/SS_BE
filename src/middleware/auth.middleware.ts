@@ -11,12 +11,14 @@ export const protect = (
   res: Response,
   next: NextFunction
 ) => {
-  // Extract token from httpOnly cookie
-  const token = req.cookies?.token;
+  // Extract token from Authorization header
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
-    return res.status(401).json({ message: "Not authorized. Please login first." });
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
+
+  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(
