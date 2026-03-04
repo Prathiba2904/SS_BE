@@ -18,9 +18,8 @@ export const register = async (req: Request, res: Response) => {
       message: "User registered successfully",
       token: data.token,
       user: {
-        id: data.user._id,
+        id: data.user.id,
         email: data.user.email,
-        role: data.user.role
       }
     });
   } catch (error: any) {
@@ -55,9 +54,8 @@ export const login = async (req: Request, res: Response) => {
       message: "Login successful",
       token: data.token,
       user: {
-        id: data.user._id,
+        id: data.user.id,
         email: data.user.email,
-        role: data.user.role
       }
     });
   } catch (error: any) {
