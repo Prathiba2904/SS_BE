@@ -3,8 +3,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import connectDB from "./db/db.config";
-import expenseRoutes from "./routes/expense.routes.js";
-import authRoutes from "./routes/auth.routes.js";
+import expenseRoutes from "./routes/expense.routes";
+import authRoutes from "./routes/auth.routes";
 
 dotenv.config();
 
