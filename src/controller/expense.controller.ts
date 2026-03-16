@@ -1,14 +1,21 @@
-import { Request, Response } from "express";
-import { createExpense, getAllExpenses, updateExpense, deleteExpense } from "../service/expense.service";
+import { Response } from "express";
+import {
+  createExpense,
+  getAllExpenses,
+  getExpenseById as getExpenseByIdService,
+  updateExpense,
+  deleteExpense,
+} from "../service/expense.service";
 import { AuthRequest } from "../middleware/auth.middleware";
 
 export const addExpense = async (req: AuthRequest, res: Response) => {
   try {
-    // Extract userId from authenticated user token
     const userId = req.user?.id;
-    
+
     if (!userId) {
-      return res.status(401).json({ error: "User ID not found in token. Please login again." });
+      return res
+        .status(401)
+        .json({ message: "User ID not found in token. Please login again." });
     }
 
     const expenseData = {
@@ -19,7 +26,7 @@ export const addExpense = async (req: AuthRequest, res: Response) => {
     const expense = await createExpense(expenseData);
     res.status(201).json(expense);
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ message: err.message });
   }
 };
 
@@ -28,7 +35,33 @@ export const getExpenses = async (req: AuthRequest, res: Response) => {
     const expenses = await getAllExpenses();
     res.json(expenses);
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getExpenseById = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ message: "User ID not found in token. Please login again." });
+    }
+
+    const expense = await getExpenseByIdService(id, userId);
+
+    if (!expense) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+
+    return res.status(200).json(expense);
+  } catch (err: any) {
+    console.error("getExpenseById error:", err);
+    return res.status(500).json({
+      message: "Failed to fetch expense. Please try again.",
+    });
   }
 };
 
@@ -41,7 +74,7 @@ export const editExpense = async (req: AuthRequest, res: Response) => {
       data: updatedExpense,
     });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ message: err.message });
   }
 };
 
@@ -51,6 +84,6 @@ export const removeExpense = async (req: AuthRequest, res: Response) => {
     await deleteExpense(id);
     res.json({ message: "Deleted successfully" });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ message: err.message });
   }
 };

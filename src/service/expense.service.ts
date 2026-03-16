@@ -8,18 +8,19 @@ export const getAllExpenses = async () => {
   return await Expense.find();
 };
 
+export const getExpenseById = async (id: string, userId: string) => {
+  return await Expense.findOne({ _id: id, userId });
+};
+
 export const updateExpense = async (id: string, data: any) => {
   try {
-    // Get existing expense first
     const existingExpense = await Expense.findById(id);
     if (!existingExpense) {
       throw new Error("Expense not found");
     }
 
-    // Update only the fields provided, keep others intact
     Object.assign(existingExpense, data);
 
-    // Save the document (this will run validators)
     const updatedExpense = await existingExpense.save();
 
     return updatedExpense;
