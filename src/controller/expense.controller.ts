@@ -32,7 +32,15 @@ export const addExpense = async (req: AuthRequest, res: Response) => {
 
 export const getExpenses = async (req: AuthRequest, res: Response) => {
   try {
-    const expenses = await getAllExpenses();
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ message: "User ID not found in token. Please login again." });
+    }
+
+    const expenses = await getAllExpenses(userId);
     res.json(expenses);
   } catch (err: any) {
     res.status(500).json({ message: err.message });
@@ -68,7 +76,15 @@ export const getExpenseById = async (req: AuthRequest, res: Response) => {
 export const editExpense = async (req: AuthRequest, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const updatedExpense = await updateExpense(id, req.body);
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ message: "User ID not found in token. Please login again." });
+    }
+
+    const updatedExpense = await updateExpense(id, userId, req.body);
     res.json({
       message: "Expense updated successfully",
       data: updatedExpense,
@@ -81,7 +97,15 @@ export const editExpense = async (req: AuthRequest, res: Response) => {
 export const removeExpense = async (req: AuthRequest, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    await deleteExpense(id);
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ message: "User ID not found in token. Please login again." });
+    }
+
+    await deleteExpense(id, userId);
     res.json({ message: "Deleted successfully" });
   } catch (err: any) {
     res.status(400).json({ message: err.message });

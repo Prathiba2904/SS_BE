@@ -4,17 +4,17 @@ export const createExpense = async (data: any) => {
   return await Expense.create(data);
 };
 
-export const getAllExpenses = async () => {
-  return await Expense.find();
+export const getAllExpenses = async (userId: string) => {
+  return await Expense.find({ userId });
 };
 
 export const getExpenseById = async (id: string, userId: string) => {
   return await Expense.findOne({ _id: id, userId });
 };
 
-export const updateExpense = async (id: string, data: any) => {
+export const updateExpense = async (id: string, userId: string, data: any) => {
   try {
-    const existingExpense = await Expense.findById(id);
+    const existingExpense = await Expense.findOne({ _id: id, userId });
     if (!existingExpense) {
       throw new Error("Expense not found");
     }
@@ -29,6 +29,6 @@ export const updateExpense = async (id: string, data: any) => {
   }
 };
 
-export const deleteExpense = async (id: string) => {
-  return await Expense.findByIdAndDelete(id);
+export const deleteExpense = async (id: string, userId: string) => {
+  return await Expense.findOneAndDelete({ _id: id, userId });
 };
