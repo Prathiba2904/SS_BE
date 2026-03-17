@@ -24,17 +24,29 @@ export const register = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Registration error:", error);
-    
-    // Handle specific database errors
+
+    if (res.headersSent) return;
+
+    // Duplicate key (MongoDB)
     if (error.code === 11000) {
       return res.status(400).json({
         message: "Email already exists. Please use a different email.",
       });
     }
 
-    return res.status(400).json({
-      message: error.message || "Registration failed. Please try again.",
-    });
+    // Mongoose validation error
+    if (error.name === "ValidationError" && error.errors) {
+      const first = Object.values(error.errors)[0] as any;
+      return res.status(400).json({
+        message: first?.message || "Validation failed. Check your input.",
+      });
+    }
+
+    const message =
+      typeof error?.message === "string"
+        ? error.message
+        : "Registration failed. Please try again.";
+    return res.status(400).json({ message });
   }
 };
 

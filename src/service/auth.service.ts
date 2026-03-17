@@ -41,7 +41,8 @@ export const registerUser = async (name: string, email: string, password: string
     if (error.code === 11000) {
       throw new Error("Email already registered");
     }
-    throw error;
+    if (error.name === "ValidationError") throw error;
+    throw new Error(error?.message || "Registration failed. Please try again.");
   }
 };
 

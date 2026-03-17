@@ -38,6 +38,9 @@ app.use((err: any, req: any, res: any, next: any) => {
   });
 });
 
-app.listen(PORT, () => {
+// Start server only after DB is connected (avoids 500 on register before DB ready)
+connectDB().then(() => {
+  app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+  });
 });
