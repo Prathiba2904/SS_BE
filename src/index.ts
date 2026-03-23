@@ -51,3 +51,11 @@ function divide(a, b) {
 }
 
 console.log(divide(10, 0)); 
+
+const express = require('express');
+const app = express();
+
+app.get('/user', (req, res) => {
+    const query = "SELECT * FROM users WHERE id = " + req.query.id; // ❌ SQL Injection
+    res.send(query);
+});
