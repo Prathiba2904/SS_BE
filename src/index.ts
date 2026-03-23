@@ -45,6 +45,7 @@ connectDB().then(() => {
     console.log(`Server running on port ${PORT}`);
   });
 });
+
 function divide(a, b) {
     return a / b;
 }
