@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import express from "express";
-import axios from "axios";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
@@ -8,6 +7,8 @@ import xss from "xss-clean";
 import connectDB from "./db/db.config";
 import expenseRoutes from "./routes/expense.routes";
 import authRoutes from "./routes/auth.routes";
+import sonarRoutes from "./routes/sonar.routes";
+import { fetchAndStoreSonarIssues } from "./service/sonar.service";
 
 dotenv.config();
 
@@ -28,12 +29,24 @@ app.use(
   })
 );
 app.use(helmet());
+// Express 5 exposes req.query as a getter; xss-clean expects a writable object.
+app.use((req, _res, next) => {
+  Object.defineProperty(req, "query", {
+    value: { ...req.query },
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  });
+  next();
+});
 app.use(xss());
 app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/expense", expenseRoutes);
+app.use("/api", sonarRoutes);
+app.use("/", sonarRoutes);
 
 let pipelineStatus: { status: string; message: string } = {
   status: "SUCCESS",
@@ -53,54 +66,6 @@ app.get("/pipeline-status", (_req, res) => {
   res.json(pipelineStatus);
 });
 
-app.get("/sonar-issues", async (_req, res) => {
-  try {
-    const sonarBaseUrl = process.env.SONAR_BASE_URL;
-    const sonarToken = process.env.SONAR_TOKEN;
-    const projectKey = process.env.SONAR_PROJECT_KEY || "spend-smartly";
-    const severities = process.env.SONAR_SEVERITIES || "CRITICAL,HIGH";
-
-    if (!sonarBaseUrl || !sonarToken) {
-      return res.status(500).json({
-        message: "SonarQube is not configured on the backend.",
-      });
-    }
-
-    const response = await axios.get(`${sonarBaseUrl}/api/issues/search`, {
-      params: {
-        projectKeys: projectKey,
-        severities,
-      },
-      auth: {
-        username: sonarToken,
-        password: "",
-      },
-      timeout: 8000,
-    });
-
-    type SonarIssue = {
-      severity?: string;
-      message?: string;
-      component?: string;
-      line?: number;
-    };
-
-    const issues = (response.data?.issues || []).map((issue: SonarIssue) => ({
-      severity: issue.severity || "UNKNOWN",
-      message: issue.message || "No message",
-      component: issue.component || "Unknown file",
-      line: issue.line ?? null,
-    }));
-
-    return res.status(200).json({ issues });
-  } catch (error: any) {
-    console.error("SonarQube fetch error:", error?.message || error);
-    return res.status(500).json({
-      message: "Failed to fetch SonarQube issues. SonarQube may be unreachable.",
-    });
-  }
-});
-
 app.use((err: any, req: any, res: any, next: any) => {
   console.error(err.stack);
   res.status(500).json({
@@ -113,4 +78,26 @@ connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+
+  const fetchIntervalMs = Number(process.env.SONAR_FETCH_INTERVAL_MS || 60000);
+  const safeFetchIntervalMs = Number.isFinite(fetchIntervalMs) && fetchIntervalMs > 0
+    ? fetchIntervalMs
+    : 60000;
+
+  const fetchSonarIssuesJob = async () => {
+    try {
+      const result = await fetchAndStoreSonarIssues();
+      console.log(
+        `Sonar sync complete: added=${result.addedCount}, total=${result.totalCount}`
+      );
+    } catch (error: any) {
+      console.error("Sonar scheduled sync failed:", error?.message || error);
+    }
+  };
+
+  // Run immediately at startup, then poll every N ms.
+  void fetchSonarIssuesJob();
+  setInterval(() => {
+    void fetchSonarIssuesJob();
+  }, safeFetchIntervalMs);
 });
