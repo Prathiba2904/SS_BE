@@ -45,17 +45,3 @@ connectDB().then(() => {
     console.log(`Server running on port ${PORT}`);
   });
 });
-
-function divide(a, b) {
-    return a / b;
-}
-
-console.log(divide(10, 0)); 
-
-const express = require('express');
-const app = express();
-
-app.get('/user', (req, res) => {
-    const query = "SELECT * FROM users WHERE id = " + req.query.id;
-    res.send(query);
-});
