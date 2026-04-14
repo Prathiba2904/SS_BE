@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../model/user.model";
+import { getErrorMessage, isRecord } from "../utils/errors";
 
 export const registerUser = async (name: string, email: string, password: string) => {
   if (!process.env.JWT_SECRET) {
@@ -36,13 +37,15 @@ export const registerUser = async (name: string, email: string, password: string
         email: user.email,
       },
     };
-  } catch (error: any) {
-    console.error("User creation error:", error);
-    if (error.code === 11000) {
+  } catch (error: unknown) {
+    if (isRecord(error) && error.code === 11000) {
       throw new Error("Email already registered");
     }
-    if (error.name === "ValidationError") throw error;
-    throw new Error(error?.message || "Registration failed. Please try again.");
+    if (isRecord(error) && error.name === "ValidationError") {
+      if (error instanceof Error) throw error;
+      throw new Error(getErrorMessage(error));
+    }
+    throw new Error(getErrorMessage(error) || "Registration failed. Please try again.");
   }
 };
 

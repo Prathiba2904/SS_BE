@@ -1,18 +1,34 @@
 import Expense from "../model/expense.model";
+import { getErrorMessage } from "../utils/errors";
 
-export const createExpense = async (data: any) => {
-  return await Expense.create(data);
+export type ExpenseCreateInput = {
+  Amount: number;
+  Type: "Income" | "Expense";
+  Category: string;
+  Description?: string;
+  Date: Date | string;
+  userId: string;
 };
 
-export const getAllExpenses = async (userId: string) => {
-  return await Expense.find({ userId });
+export type ExpenseUpdateInput = Partial<Omit<ExpenseCreateInput, "userId">>;
+
+export const createExpense = async (data: ExpenseCreateInput) => {
+  return Expense.create(data);
 };
 
 export const getExpenseById = async (id: string, userId: string) => {
-  return await Expense.findOne({ _id: id, userId });
+  return Expense.findOne({ _id: id, userId });
 };
 
-export const updateExpense = async (id: string, userId: string, data: any) => {
+export const getAllExpenses = async (userId: string) => {
+  return Expense.find({ userId });
+};
+
+export const updateExpense = async (
+  id: string,
+  userId: string,
+  data: ExpenseUpdateInput
+) => {
   try {
     const existingExpense = await Expense.findOne({ _id: id, userId });
     if (!existingExpense) {
@@ -24,11 +40,11 @@ export const updateExpense = async (id: string, userId: string, data: any) => {
     const updatedExpense = await existingExpense.save();
 
     return updatedExpense;
-  } catch (error: any) {
-    throw new Error(`Failed to update expense: ${error.message}`);
+  } catch (error: unknown) {
+    throw new Error(`Failed to update expense: ${getErrorMessage(error)}`);
   }
 };
 
 export const deleteExpense = async (id: string, userId: string) => {
-  return await Expense.findOneAndDelete({ _id: id, userId });
+  return Expense.findOneAndDelete({ _id: id, userId });
 };

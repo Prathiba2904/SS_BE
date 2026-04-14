@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: { id: string; email?: string };
 }
 
 export const protect = (
@@ -15,8 +15,6 @@ export const protect = (
     (req.headers.authorization as string | undefined) ||
     (req.headers["x-auth-token"] as string | undefined);
 
-  console.log("Auth header received:", rawHeader);
-
   if (!rawHeader) {
     return res.status(401).json({ message: "Unauthorized. Please login." });
   }
@@ -25,20 +23,30 @@ export const protect = (
     ? rawHeader.split(" ")[1]
     : rawHeader;
 
-  console.log("Token being verified:", token);
-
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    ) as any;
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      return res.status(500).json({ message: "JWT secret is not configured" });
+    }
 
-    console.log("Decoded token:", decoded);
+    const decoded = jwt.verify(token, secret) as jwt.JwtPayload;
+    const id =
+      typeof decoded.sub === "string"
+        ? decoded.sub
+        : typeof decoded.id === "string"
+          ? decoded.id
+          : undefined;
 
-    req.user = decoded;
-    next();
+    if (!id) {
+      return res.status(401).json({ message: "Invalid token payload. Please login again." });
+    }
+
+    req.user = {
+      id,
+      email: typeof decoded.email === "string" ? decoded.email : undefined,
+    };
+    return next();
   } catch (error) {
-    console.error("JWT verification error:", error);
     return res.status(401).json({
       message: "Invalid or expired token. Please login again.",
     });

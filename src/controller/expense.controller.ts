@@ -7,6 +7,7 @@ import {
   deleteExpense,
 } from "../service/expense.service";
 import { AuthRequest } from "../middleware/auth.middleware";
+import { getErrorMessage } from "../utils/errors";
 
 export const addExpense = async (req: AuthRequest, res: Response) => {
   try {
@@ -25,8 +26,8 @@ export const addExpense = async (req: AuthRequest, res: Response) => {
 
     const expense = await createExpense(expenseData);
     res.status(201).json(expense);
-  } catch (err: any) {
-    res.status(400).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(400).json({ message: getErrorMessage(err) });
   }
 };
 
@@ -42,8 +43,8 @@ export const getExpenses = async (req: AuthRequest, res: Response) => {
 
     const expenses = await getAllExpenses(userId);
     res.json(expenses);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(500).json({ message: getErrorMessage(err) });
   }
 };
 
@@ -65,8 +66,7 @@ export const getExpenseById = async (req: AuthRequest, res: Response) => {
     }
 
     return res.status(200).json(expense);
-  } catch (err: any) {
-    console.error("getExpenseById error:", err);
+  } catch (err: unknown) {
     return res.status(500).json({
       message: "Failed to fetch expense. Please try again.",
     });
@@ -89,8 +89,8 @@ export const editExpense = async (req: AuthRequest, res: Response) => {
       message: "Expense updated successfully",
       data: updatedExpense,
     });
-  } catch (err: any) {
-    res.status(400).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(400).json({ message: getErrorMessage(err) });
   }
 };
 
@@ -107,7 +107,7 @@ export const removeExpense = async (req: AuthRequest, res: Response) => {
 
     await deleteExpense(id, userId);
     res.json({ message: "Deleted successfully" });
-  } catch (err: any) {
-    res.status(400).json({ message: err.message });
+  } catch (err: unknown) {
+    res.status(400).json({ message: getErrorMessage(err) });
   }
 };

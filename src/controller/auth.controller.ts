@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { loginUser, registerUser } from "../service/auth.service";
 import User from "../model/user.model";
+import bcrypt from "bcryptjs";
+import { getErrorMessage, isRecord } from "../utils/errors";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -22,31 +24,34 @@ export const register = async (req: Request, res: Response) => {
         email: data.user.email,
       }
     });
-  } catch (error: any) {
-    console.error("Registration error:", error);
-
+  } catch (error: unknown) {
     if (res.headersSent) return;
 
     // Duplicate key (MongoDB)
-    if (error.code === 11000) {
+    if (isRecord(error) && error.code === 11000) {
       return res.status(400).json({
         message: "Email already exists. Please use a different email.",
       });
     }
 
     // Mongoose validation error
-    if (error.name === "ValidationError" && error.errors) {
-      const first = Object.values(error.errors)[0] as any;
+    if (
+      isRecord(error) &&
+      error.name === "ValidationError" &&
+      isRecord(error.errors)
+    ) {
+      const first = Object.values(error.errors)[0];
       return res.status(400).json({
-        message: first?.message || "Validation failed. Check your input.",
+        message:
+          isRecord(first) && typeof first.message === "string"
+            ? first.message
+            : "Validation failed. Check your input.",
       });
     }
 
-    const message =
-      typeof error?.message === "string"
-        ? error.message
-        : "Registration failed. Please try again.";
-    return res.status(400).json({ message });
+    return res.status(400).json({
+      message: getErrorMessage(error) || "Registration failed. Please try again.",
+    });
   }
 };
 
@@ -70,9 +75,9 @@ export const login = async (req: Request, res: Response) => {
         email: data.user.email,
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return res.status(401).json({
-      message: error.message,
+      message: getErrorMessage(error),
     });
   }
 };
@@ -84,9 +89,9 @@ export const logout = async (req: Request, res: Response) => {
     return res.status(200).json({
       message: "Logged out successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return res.status(500).json({
-      message: error.message,
+      message: getErrorMessage(error),
     });
   }
 };
@@ -103,8 +108,8 @@ export const getUser = async (req: Request, res: Response) => {
       name: user.name,
       email: user.email,
     });
-  } catch (error: any) {
-    return res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ message: getErrorMessage(error) });
   }
 };
 
@@ -112,10 +117,9 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const { email } = req.params;
     const { name, password } = req.body;
-    const update: any = {};
+    const update: { name?: string; password?: string } = {};
     if (name) update.name = name;
     if (password) {
-      const bcrypt = require("bcryptjs");
       update.password = await bcrypt.hash(password, 10);
     }
     const user = await User.findOneAndUpdate({ email }, update, { new: true });
@@ -127,8 +131,8 @@ export const updateUser = async (req: Request, res: Response) => {
       name: user.name,
       email: user.email,
     });
-  } catch (error: any) {
-    return res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ message: getErrorMessage(error) });
   }
 };
 
@@ -140,7 +144,7 @@ export const deleteUser = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
     return res.status(200).json({ message: "User deleted successfully" });
-  } catch (error: any) {
-    return res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    return res.status(500).json({ message: getErrorMessage(error) });
   }
 };
